@@ -7,13 +7,13 @@
 (function () {
   const { esc } = LA; const $ = (s, r = document) => r.querySelector(s);
   const API = 'https://generativelanguage.googleapis.com/v1beta';
-  const K_KEY = 'tb_gemini_key', K_MODEL = 'tb_model', K_CHAT = 'tb_chat_v1';
+  const K_KEY = 'tb_gemini_key', K_MODEL = 'tb_model', K_CHAT = 'tb_chat_v1', K_MODEL_MIGRATED = 'tb_model_migrated_35lite';
   const get = (k) => { try { return sessionStorage.getItem(k) || localStorage.getItem(k) || ''; } catch { return ''; } };
   const keyOf = () => get(K_KEY);
   const setKey = (v, remember) => { try { localStorage.removeItem(K_KEY); sessionStorage.removeItem(K_KEY); if (v) (remember ? localStorage : sessionStorage).setItem(K_KEY, v); } catch { /* 無痕模式 */ } };
   const model = () => get(K_MODEL) || 'gemini-3.5-flash-lite';
   // 將先前網頁版的舊預設模型自動升級；使用者自行選過其他模型則保留。
-  try { const old = localStorage.getItem(K_MODEL); if (!old || old === 'gemini-2.5-flash' || old === 'gemini-2.0-flash') localStorage.setItem(K_MODEL, 'gemini-3.5-flash-lite'); } catch { /* ignore */ }
+  try { if (!localStorage.getItem(K_MODEL_MIGRATED)) { localStorage.setItem(K_MODEL, 'gemini-3.5-flash-lite'); localStorage.setItem(K_MODEL_MIGRATED, '1'); } } catch { /* ignore */ }
   let chat = []; try { chat = JSON.parse(localStorage.getItem(K_CHAT) || '[]'); } catch { chat = []; }
   const saveChat = () => { chat = chat.slice(-80); try { localStorage.setItem(K_CHAT, JSON.stringify(chat)); } catch { /* ignore */ } };
   let busy = false; let abort = null; let steps = [];
@@ -172,7 +172,7 @@
       LA.lastPage = 'settings'; const remembered = (() => { try { return !!localStorage.getItem(K_KEY); } catch { return false; } })();
       main.innerHTML = `<div class="card"><h3>${LA.icon('key')} Gemini API Key</h3>
         <div class="hint">到 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> 申請（用 Google 帳號登入，按「Create API key」）。用量與費用依你的 Google 帳號方案計算。</div>
-        <label class="f">API Key</label><div class="row"><input id="st-key" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" value="${esc(keyOf())}" class="grow"><button class="btn sm" id="st-eye">${LA.icon('eye', 'sm')}</button></div>
+        <label class="f">API Key</label><div class="row"><input id="st-key" type="password" autocomplete="off" spellcheck="false" placeholder="AQ.Ab… 或 AIza…" value="${esc(keyOf())}" class="grow"><button class="btn sm" id="st-eye">${LA.icon('eye', 'sm')}</button></div>
         <label class="row small" style="margin-top:8px;gap:6px"><input type="checkbox" id="st-rem" ${remembered || !keyOf() ? 'checked' : ''} style="width:auto"> 記在這台裝置（不勾＝關掉分頁就忘記，適合公用電腦）</label>
         <div class="row" style="margin-top:10px"><button class="btn pri" id="st-save">儲存並測試</button><button class="btn" id="st-del">清除 Key</button></div><div id="st-msg" class="hint"></div>
         <div class="hint small">Key 只存在這個瀏覽器，只會直接送到 Google 的 Gemini API，不經過其他伺服器、不會寫進對話紀錄或網址。</div></div>
