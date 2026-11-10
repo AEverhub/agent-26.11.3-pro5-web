@@ -1,0 +1,25 @@
+電子與程式工具箱（網頁版）
+================================
+內容：AI 助理（Gemini）、邏輯閘轉換器、電路工具、程式碼工具。純靜態網頁，不需要伺服器程式、不需要資料庫。
+
+【上傳】
+把這個資料夾裡「全部的檔案」（含 vendor 資料夾）原樣上傳到網站空間的同一個資料夾，打開 index.html 那個網址就能用。
+可以用：GitHub Pages、Netlify、Vercel、Cloudflare Pages、一般虛擬主機（cPanel 的 public_html）、學校／公司的網頁空間。
+・Netlify／Cloudflare Pages：直接把整個資料夾拖進上傳畫面。
+・GitHub Pages：建一個 repo，把檔案放到根目錄，Settings → Pages → 選 main 分支。
+注意：要用 https 網址（大部分平台預設就是）。直接在電腦上雙擊 index.html（file://）大多數功能也能用，但建議放到網站上。
+
+【第一次使用】
+1. 打開網站 → 下方「設定」。
+2. 到 https://aistudio.google.com/apikey 用 Google 帳號申請 API Key（AIza 開頭），貼上 → 「儲存並測試」。
+3. 回到「AI 助理」就能聊天；AI 可以直接操作邏輯閘、電路、程式碼三個頁面。
+
+【資料與隱私】
+・每個訪客用自己的 API Key，Key 只存在他自己的瀏覽器，只會直接送到 Google 的 Gemini API；網站本身不會收到 Key。
+・用量與費用依該 Google 帳號的方案計算。
+・工具頁內容、對話紀錄存在各自的瀏覽器（localStorage）；「設定 → 匯出備份」可以帶到別台裝置（備份不含 Key）。
+・網站裡沒有寫死任何 API Key。
+
+【限制】
+・程式碼工具在網頁版只能直接執行 JavaScript（在瀏覽器裡，5 秒逾時）；Python、C 等可以編輯、請 AI 檢查、下載回電腦執行。
+・iPhone：Safari 打開 → 分享 → 加入主畫面，就會像 App 一樣全螢幕。
