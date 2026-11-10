@@ -11,7 +11,9 @@
   const get = (k) => { try { return sessionStorage.getItem(k) || localStorage.getItem(k) || ''; } catch { return ''; } };
   const keyOf = () => get(K_KEY);
   const setKey = (v, remember) => { try { localStorage.removeItem(K_KEY); sessionStorage.removeItem(K_KEY); if (v) (remember ? localStorage : sessionStorage).setItem(K_KEY, v); } catch { /* 無痕模式 */ } };
-  const model = () => get(K_MODEL) || 'gemini-2.5-flash';
+  const model = () => get(K_MODEL) || 'gemini-3.5-flash-lite';
+  // 將先前網頁版的舊預設模型自動升級；使用者自行選過其他模型則保留。
+  try { const old = localStorage.getItem(K_MODEL); if (!old || old === 'gemini-2.5-flash' || old === 'gemini-2.0-flash') localStorage.setItem(K_MODEL, 'gemini-3.5-flash-lite'); } catch { /* ignore */ }
   let chat = []; try { chat = JSON.parse(localStorage.getItem(K_CHAT) || '[]'); } catch { chat = []; }
   const saveChat = () => { chat = chat.slice(-80); try { localStorage.setItem(K_CHAT, JSON.stringify(chat)); } catch { /* ignore */ } };
   let busy = false; let abort = null; let steps = [];
@@ -79,7 +81,7 @@
     catch (e) { if (e.name === 'AbortError') throw e; throw new Error('連不到 Google（網路問題或被擋）：' + e.message); }
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { const m = (j.error && j.error.message) || ('HTTP ' + r.status);
-      if (r.status === 400 && /API key/i.test(m)) throw new Error('API Key 無效：請到「設定」頁確認貼的是 Gemini API Key（AIza 開頭）');
+      if (r.status === 400 && /API key/i.test(m)) throw new Error('API Key 無效：請到「設定」頁確認貼的是 Gemini API Key（AIza 或 AQ. 開頭）');
       if (r.status === 403) throw new Error('這組 API Key 沒有權限使用這個模型，或 Generative Language API 沒有啟用：' + m);
       if (r.status === 404) throw new Error(`找不到模型「${model()}」：到「設定」頁重新選一個`);
       if (r.status === 429) throw new Error('這組 API Key 的用量到上限或請求太頻繁，請稍後再試（或到 Google AI Studio 查看額度）');
@@ -188,7 +190,7 @@
       main.onclick = LA.guard(async (e) => {
         const t = e.target;
         if (t.closest('#st-eye')) { const i = $('#st-key', main); i.type = i.type === 'password' ? 'text' : 'password'; return; }
-        if (t.closest('#st-save')) { const v = $('#st-key', main).value.trim(); if (!v) return msg('請貼上 API Key', true); if (!/^[\w-]{20,}$/.test(v)) return msg('格式不像 API Key（通常是 AIza 開頭、39 個字）', true); setKey(v, $('#st-rem', main).checked); msg('測試中…'); try { const n = await list(); msg(`可以用了：找到 ${n} 個模型。`); } catch (er) { msg('已儲存，但測試失敗：' + er.message, true); } return; }
+        if (t.closest('#st-save')) { const v = $('#st-key', main).value.trim(); if (!v) return msg('請貼上 API Key', true); if (!/^(?:AIza[\w-]{16,}|AQ\.[A-Za-z0-9._-]{12,})$/.test(v)) return msg('格式不像 Gemini API Key（可為 AIza… 或 AQ.Ab… 開頭）', true); setKey(v, $('#st-rem', main).checked); msg('測試中…'); try { const n = await list(); msg(`可以用了：找到 ${n} 個模型。`); } catch (er) { msg('已儲存，但測試失敗：' + er.message, true); } return; }
         if (t.closest('#st-del')) { setKey(''); $('#st-key', main).value = ''; return msg('已清除'); }
         if (t.closest('#st-list')) { try { const n = await list(); msg(`找到 ${n} 個模型`); } catch (er) { msg(er.message, true); } return; }
         if (t.closest('#st-export')) { const data = { app: 'toolbox', v: 1, at: Date.now(), db: LA.tb.db, chat }; await LA.saveBlob(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), 'toolbox-backup.json'); return LA.toast('已下載備份（不含 API Key）'); }
