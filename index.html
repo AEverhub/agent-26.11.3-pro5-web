@@ -1,15 +1,289 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Agent 中控中心｜網頁版</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 助理</title>
+<meta name="description" content="連到朋友的 Agent 中控中心（聯機被動端），iPhone、iPad、電腦都能用">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AI 助理">
+<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f6bed'/%3E%3Ccircle cx='24' cy='28' r='5' fill='white'/%3E%3Ccircle cx='40' cy='28' r='5' fill='white'/%3E%3Cpath d='M20 42c6 6 18 6 24 0' stroke='white' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<!--
+  Agent 中控中心：網頁版固定入口（放到 GitHub Pages 用）
+  ・給 iPhone／iPad／電腦：不用裝 App，連到朋友（主機）的 AI 助理，當「聯機被動端」（一般用戶，權限由主機決定）
+  ・主機的公開網址每次重開都會變：這個頁面記住你的聯機身分，每次打開幫你找到主機現在的網址再帶你進去，不用重新加入
+  ・身分（聯機 token）只存在這個瀏覽器；沒有任何資料會送到 GitHub
+  設定：把下面的 DIRECTORY 改成你的聯機目錄網址（主機 App「聯機」頁看得到，也就是 LINE 中繼的 Cloudflare Worker 網址）。
+        留空的話，使用者要輸入「聯機碼@主機網址」或主機網址。
+  連結參數（# 後面或 ? 後面都可以）：c=聯機碼、k=邀請碼（不用密碼）、d=目錄網址、u=主機網址
+    例：https://你的帳號.github.io/ai/#c=K7P2QX&k=邀請碼
+-->
 <style>
-:root{color-scheme:dark;--bg:#080b12;--panel:#111827;--line:#263247;--text:#f4f7fb;--muted:#9aa8bd;--accent:#68d6c4;--accent2:#8bb8ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#17243b 0,transparent 42%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}main{max-width:820px;margin:0 auto;padding:72px 22px 56px}.eyebrow{color:var(--accent);font-size:.8rem;letter-spacing:.16em;font-weight:700}.card{margin-top:24px;padding:28px;border:1px solid var(--line);border-radius:20px;background:rgba(17,24,39,.86);box-shadow:0 20px 80px #0006}h1{font-size:clamp(2rem,7vw,4rem);line-height:1.1;margin:10px 0 16px;letter-spacing:-.04em}h2{font-size:1.2rem;margin:0 0 10px}p{color:var(--muted);margin:8px 0 18px}.row{display:flex;gap:10px;flex-wrap:wrap}input{flex:1;min-width:230px;padding:14px 15px;border:1px solid var(--line);border-radius:12px;background:#0a0f1a;color:var(--text);font:inherit}button{padding:14px 18px;border:0;border-radius:12px;background:var(--accent);color:#071014;font-weight:800;font:inherit;cursor:pointer}button:hover{filter:brightness(1.08)}.hint{font-size:.9rem;margin-top:14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:22px}.item{padding:16px;border:1px solid var(--line);border-radius:14px;background:#0c1320}.item b{display:block;color:var(--text);margin-bottom:4px}.item span{color:var(--muted);font-size:.92rem}code{color:var(--accent2);word-break:break-all}@media(max-width:520px){main{padding-top:42px}.card{padding:21px}}
-</style></head>
-<body><main>
-<div class="eyebrow">AGENT CONTROL CENTER · WEB ACCESS</div>
-<h1>把你的 Agent<br>帶到瀏覽器。</h1>
-<p>這個入口頁適合放在 GitHub Pages。真正的網頁版由你的 Agent 主機提供，因此只要貼上主機公開網址，就能從手機、平板或電腦開啟。</p>
-<section class="card"><h2>開啟網頁版</h2><p>請輸入主機公開網址，例如 <code>https://your-agent.example.com</code>。系統會開啟主機的 <code>/net/app/</code> 網頁版。</p><div class="row"><input id="host" type="url" placeholder="https://你的主機網址"><button id="open">開啟 Agent</button></div><p class="hint">注意：GitHub Pages 是靜態託管，不能取代執行 Node.js 後端的 Agent 主機。</p></section>
-<div class="grid"><div class="item"><b>Android APK</b><span>含內建 PRoot 的手機版，適合直接在 Android 執行。</span></div><div class="item"><b>深色介面</b><span>延續原專案的暗色系 UI，適合長時間操作。</span></div><div class="item"><b>安全提醒</b><span>請只輸入你信任的 HTTPS 主機網址，不要把 API 金鑰放到 Pages。</span></div></div>
-</main><script>const input=document.querySelector('#host');const saved=localStorage.getItem('agent-host');if(saved)input.value=saved;function open(){let v=input.value.trim();if(!/^https?:\/\//i.test(v))return alert('請輸入完整的 http:// 或 https:// 網址');v=v.replace(/\/+$/,'');localStorage.setItem('agent-host',v);location.href=v+'/net/app/';}document.querySelector('#open').onclick=open;input.addEventListener('keydown',e=>{if(e.key==='Enter')open()});</script></body></html>
+:root{--bg:#f6f7fb;--card:#ffffff;--text:#1b1f2a;--muted:#5f6675;--line:#e3e6ee;--pri:#4f6bed;--pri-text:#ffffff;--err:#c62828;--ok:#2e7d32;--warn:#a15c00;--input:#ffffff;--shadow:0 6px 24px rgba(20,30,60,.08)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111318;--card:#1a1d24;--text:#e8eaf0;--muted:#a1a7b5;--line:#2b303b;--pri:#7d93ff;--pri-text:#0f1220;--err:#ff8a80;--ok:#81c784;--warn:#ffb74d;--input:#14171d;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#111318;--card:#1a1d24;--text:#e8eaf0;--muted:#a1a7b5;--line:#2b303b;--pri:#7d93ff;--pri-text:#0f1220;--err:#ff8a80;--ok:#81c784;--warn:#ffb74d;--input:#14171d;--shadow:0 6px 24px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:440px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom))}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:44px;height:44px;border-radius:12px;background:var(--pri);display:grid;place-items:center;flex:none}
+.brand h1{font-size:20px;margin:0;font-weight:650;letter-spacing:.2px}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.card+.card{margin-top:14px}
+h2{font-size:17px;margin:0 0 6px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+label{display:block;font-size:14px;font-weight:600;margin:14px 0 6px}
+input[type=text],input[type=password],select{width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--input);border:1px solid var(--line);border-radius:10px;padding:11px 12px;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px color-mix(in srgb,var(--pri) 22%,transparent)}
+.row{display:flex;gap:8px;align-items:center}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin-top:16px;color:var(--text)}
+.check input{margin-top:3px;width:18px;height:18px;flex:none}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:11px 14px}
+button.pri{width:100%;margin-top:18px;background:var(--pri);color:var(--pri-text);border-color:var(--pri);font-weight:650;font-size:16px}
+button:disabled{opacity:.55;cursor:default}
+.link{border:none;background:none;color:var(--pri);padding:0;font-size:14px;text-decoration:underline;text-underline-offset:2px}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+.err{color:var(--err);font-size:14px;margin-top:12px;white-space:pre-line}
+.ok{color:var(--ok)}
+.warn{color:var(--warn)}
+.status{display:flex;align-items:center;gap:10px;font-size:15px}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--pri);animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.host{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:12px}
+.host b{display:block}
+.host small{color:var(--muted)}
+.tips{font-size:13px;color:var(--muted);line-height:1.6}
+.tips b{color:var(--text)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px;z-index:9}
+.modal .card{max-height:80vh;overflow:auto;width:100%;max-width:520px;white-space:pre-wrap;font-size:14px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 64 64"><circle cx="24" cy="28" r="5" fill="#fff"/><circle cx="40" cy="28" r="5" fill="#fff"/><path d="M20 42c6 6 18 6 24 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg></div>
+    <div><h1>AI 助理</h1><p>連到朋友的 Agent 中控中心</p></div>
+  </div>
+
+  <!-- 連線中 -->
+  <section id="v-go" class="card" hidden>
+    <div class="status"><div class="spin"></div><span id="go-text">連線中…</span></div>
+    <div class="host" id="go-host" hidden><div><b id="go-name"></b><small id="go-me"></small></div><button id="go-switch" type="button">換主機</button></div>
+    <div id="go-err" class="err" hidden></div>
+    <div class="row" id="go-actions" style="margin-top:14px" hidden><button id="go-retry" type="button" style="flex:1">再試一次</button><button id="go-reset" type="button" style="flex:1">重新加入</button></div>
+  </section>
+
+  <!-- 加入 -->
+  <section id="v-join" class="card" hidden>
+    <h2>加入主機</h2>
+    <p class="sub">你會成為主機上的一般用戶，可以用的功能由主機決定。這個網頁版只能連到別人的主機，不能自己當主機。</p>
+
+    <div id="f-pick-wrap" hidden>
+      <label for="f-pick">選擇主機</label>
+      <select id="f-pick"><option value="">— 從列表選，或在下面輸入聯機碼 —</option></select>
+    </div>
+    <label for="f-code">聯機碼</label>
+    <input id="f-code" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="例：K7P2QX（或 聯機碼@主機網址）">
+    <div class="hint" id="f-code-hint">跟主機要 6 位英數字的聯機碼。</div>
+    <div id="f-host" class="host" hidden><div><b id="f-host-name"></b><small id="f-host-sub"></small></div></div>
+
+    <label for="f-name">你的名字</label>
+    <input id="f-name" type="text" maxlength="20" autocomplete="nickname" placeholder="中文或英文，例：小美">
+
+    <div id="f-pass-wrap" hidden>
+      <label for="f-pass">聯機密碼</label>
+      <input id="f-pass" type="password" autocomplete="off" placeholder="跟主機要">
+    </div>
+
+    <label class="check"><input type="checkbox" id="f-agree"><span>我已閱讀並同意主機的<button type="button" class="link" id="f-terms">用戶條款</button></span></label>
+    <div id="f-err" class="err" hidden></div>
+    <button class="pri" id="f-go" type="button">加入</button>
+
+    <details style="margin-top:16px"><summary class="hint" style="cursor:pointer">進階：聯機目錄網址</summary>
+      <input id="f-dir" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://….workers.dev" style="margin-top:8px">
+      <div class="hint">主機 App「聯機」頁有寫。有目錄就只要輸入聯機碼，主機換網址也找得到。</div>
+    </details>
+  </section>
+
+  <section class="card tips" id="v-tips">
+    <b>iPhone／iPad：</b>用 Safari 打開這個網址 → 下方「分享」→「加入主畫面」。之後從主畫面點圖示，就會像 App 一樣全螢幕，而且會記住你，不用每次加入。<br>
+    主機那邊要開著 App 並啟動 Bot，才連得上。
+  </section>
+</main>
+
+<script>
+'use strict';
+// ===== 設定：你的聯機目錄網址（主機 App「聯機」頁可以看到；留空也能用「聯機碼@主機網址」） =====
+const DIRECTORY = '';
+// ==========================================================================================
+
+const $ = (s) => document.querySelector(s);
+const KEY = 'la_entry';
+const ID_RE = /^[A-Z]{4}\d{11}$/, CODE_RE = /^[A-Z2-9]{6}$/;
+const SAFE_URL = /^(https:\/\/|http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$))/i;
+let st = load();
+let info = null;   // 目前選到的主機 /net/info
+let target = null; // { code, url, name }
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { return {}; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { /* 無痕模式存不了：這次還是能用 */ } }
+function show(id) { for (const v of ['#v-go', '#v-join']) $(v).hidden = v !== id; }
+function err(sel, msg) { const e = $(sel); e.hidden = !msg; e.textContent = msg || ''; }
+function trimUrl(u) { return String(u || '').trim().replace(/\/+$/, ''); }
+function dir() { return trimUrl(st.dir || DIRECTORY); }
+function newId() {
+  if (ID_RE.test(st.id || '')) return st.id;
+  const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; const r = new Uint32Array(15); crypto.getRandomValues(r);
+  let id = ''; for (let i = 0; i < 4; i++) id += L[r[i] % L.length]; for (let i = 4; i < 15; i++) id += String(r[i] % 10);
+  st.id = id; save(); return id;
+}
+async function getJson(url, opt = {}, ms = 12000) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, { ...opt, signal: ctl.signal, cache: 'no-store' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(j.error || ('主機回應 ' + r.status)); e.status = r.status; throw e; }
+    return j;
+  } catch (e) {
+    if (e.name === 'AbortError') { const x = new Error('連線逾時'); x.net = true; throw x; }
+    if (e.status) throw e;
+    const x = new Error('連不上'); x.net = true; throw x;   // 網路錯誤、或主機是舊版（沒有開放這個網頁跨網域連線）
+  } finally { clearTimeout(t); }
+}
+/** 「CODE」「CODE@https://主機」或「https://主機」 */
+function parseTarget(s) {
+  const t = String(s || '').trim();
+  let m = /^([A-Za-z2-9]{6})\s*@\s*(https?:\/\/\S+)$/.exec(t); if (m) return { code: m[1].toUpperCase(), url: trimUrl(m[2]) };
+  if (/^https?:\/\//i.test(t)) return { code: '', url: trimUrl(t) };
+  if (/^[A-Za-z2-9]{6}$/.test(t)) return { code: t.toUpperCase(), url: '' };
+  return null;
+}
+/** 聯機碼 → 主機目前的網址（查目錄） */
+async function resolve(t) {
+  if (t.url) return { ...t, online: null };
+  const d = dir(); if (!d) throw new Error('沒有設定聯機目錄：請輸入「聯機碼@主機網址」，或在「進階」填目錄網址');
+  const r = await getJson(`${d}/net/resolve?code=${encodeURIComponent(t.code)}`).catch((e) => { if (e.status === 404) throw new Error('找不到這個聯機碼（主機可能沒有公開，或還沒啟動過）'); throw new Error('讀不到聯機目錄：' + e.message); });
+  return { code: t.code, url: trimUrl(r.url), name: r.name || '', locked: !!r.locked, online: r.at ? Date.now() - r.at < 10 * 60e3 : null, at: r.at };
+}
+function b64url(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+/** 帶著身分進主機的網頁版 */
+function enter(url) {
+  const hand = { token: st.token, id: st.id, name: st.name, code: st.code, host_name: st.host_name, role: st.role, status: st.status, console: st.console, version: st.version, entry: location.href.split('#')[0] };
+  location.replace(`${url}/net/app/#s=${b64url(hand)}`);
+}
+function ago(ms) { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? '剛剛' : m < 60 ? `${m} 分鐘前` : m < 1440 ? `${Math.round(m / 60)} 小時前` : `${Math.round(m / 1440)} 天前`; }
+
+// ---------- 已經加入過：直接連 ----------
+async function autoConnect() {
+  show('#v-go'); err('#go-err', ''); $('#go-actions').hidden = true;
+  $('#go-host').hidden = false; $('#go-name').textContent = st.host_name || st.code || '主機'; $('#go-me').textContent = `你是：${st.name || ''}`;
+  $('#go-text').textContent = '尋找主機…';
+  try {
+    target = await resolve({ code: st.code, url: st.code ? '' : st.url });
+    st.url = target.url; save();
+    $('#go-text').textContent = '確認身分…';
+    try {
+      const me = await getJson(`${target.url}/net/u/api/me`, { headers: { authorization: 'Bearer ' + st.token } });
+      st.name = me.name || st.name; st.role = me.role; st.status = me.status; st.console = me.console || ''; st.host_name = me.host_name || st.host_name; save();
+    } catch (e) {
+      if (e.status === 401 || e.status === 403) { delete st.token; save(); return startJoin('主機那邊的身分已失效（可能被移除或封鎖），請重新加入'); }
+      if (!e.net) throw e;
+      // 主機是舊版（沒開放跨網域）：還是帶過去，讓主機的網頁版自己處理
+    }
+    $('#go-text').textContent = '進入中…';
+    enter(target.url);
+  } catch (e) {
+    $('#go-text').textContent = '連不上主機';
+    err('#go-err', `${e.message}${target && target.online === false ? `\n主機最後在線：${ago(target.at)}，請主機打開 App 並啟動 Bot。` : '\n請確認主機開著 App 並啟動 Bot。'}`);
+    $('#go-actions').hidden = false;
+  }
+}
+
+// ---------- 還沒加入：加入畫面 ----------
+async function loadList() {
+  const d = dir(); $('#f-pick-wrap').hidden = true; if (!d) return;
+  try {
+    const r = await getJson(`${d}/net/list`, {}, 8000); const items = (r.items || []).filter((x) => CODE_RE.test(x.code));
+    const sel = $('#f-pick'); sel.length = 1;
+    for (const x of items) { const o = document.createElement('option'); o.value = x.code; o.textContent = `${x.name || '（未命名）'}　${x.code}${x.locked ? '　🔒' : ''}${x.online ? '' : '　（離線）'}`; sel.appendChild(o); }
+    $('#f-pick-wrap').hidden = !items.length;
+  } catch { /* 沒有列表也能手動輸入 */ }
+}
+let checkSeq = 0;
+async function checkHost() {
+  const seq = ++checkSeq; info = null; target = null; $('#f-host').hidden = true; $('#f-pass-wrap').hidden = true;   // 不清掉錯誤訊息（例如「身分已失效」要讓人看得到）
+  const t = parseTarget($('#f-code').value); if (!t) return;
+  $('#f-host').hidden = false; $('#f-host-name').textContent = '尋找主機…'; $('#f-host-sub').textContent = '';
+  try {
+    const r = await resolve(t); if (seq !== checkSeq) return; target = r;
+    try { info = await getJson(`${r.url}/net/info`); } catch (e) { if (e.net) { info = { legacy: true, name: r.name, locked: r.locked, code: r.code }; } else throw e; }
+    if (seq !== checkSeq) return;
+    $('#f-host-name').textContent = info.name || r.name || '主機';
+    $('#f-host-sub').textContent = info.legacy ? '主機版本較舊：按「加入」後會改在主機的網頁上加入' : `聯機碼 ${info.code || r.code}${r.online === false ? `・最後在線 ${ago(r.at)}` : ''}`;
+    $('#f-pass-wrap').hidden = !(info.locked && !st.invite);
+  } catch (e) { if (seq !== checkSeq) return; $('#f-host-name').textContent = '找不到主機'; $('#f-host-sub').textContent = e.message; }
+}
+function startJoin(msg) {
+  show('#v-join'); err('#f-err', msg || '');
+  if (st.code || st.url) $('#f-code').value = st.code ? (st.url && !dir() ? `${st.code}@${st.url}` : st.code) : st.url;
+  if (st.name) $('#f-name').value = st.name;
+  $('#f-dir').value = st.dir || DIRECTORY;
+  loadList(); if ($('#f-code').value) checkHost();
+}
+async function join() {
+  err('#f-err', ''); const btn = $('#f-go');
+  const t = parseTarget($('#f-code').value); if (!t) return err('#f-err', '聯機碼是 6 個英數字（例：K7P2QX），或「聯機碼@主機網址」');
+  const name = $('#f-name').value.trim(); if (!name) return err('#f-err', '請輸入名字');
+  if (!$('#f-agree').checked) return err('#f-err', '請先閱讀並勾選同意用戶條款');
+  btn.disabled = true; btn.textContent = '加入中…';
+  try {
+    if (!target || (t.code && target.code !== t.code)) { await checkHost(); }
+    if (!target) throw new Error('找不到主機');
+    if (info && info.legacy) { st.code = target.code || t.code; st.url = target.url; save(); location.replace(`${target.url}/net/app/${st.invite ? '#i=' + st.invite : ''}`); return; }
+    const id = newId();
+    const r = await getJson(`${target.url}/net/join`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: (info && info.code) || target.code || t.code, password: $('#f-pass').value || '', invite: st.invite || '', id, name, agree: true }) });
+    Object.assign(st, { token: r.token, id, name, code: r.code || target.code || t.code, url: target.url, host_name: r.host_name || (info && info.name) || '', role: r.role, status: r.status, console: r.console || '', version: (info && info.version) || '' });
+    delete st.invite; save();
+    if (r.status === 'pending') { show('#v-go'); $('#go-text').textContent = '已送出加入申請，等主機核准後就能用'; }
+    enter(target.url);
+  } catch (e) { err('#f-err', e.message); }
+  finally { btn.disabled = false; btn.textContent = '加入'; }
+}
+
+// ---------- 連結參數（# 或 ?）：c 聯機碼、k 邀請碼、d 目錄、u 主機網址；#leave＝從主機網頁版「離開」回來 ----------
+(function params() {
+  const q = new URLSearchParams((location.hash.replace(/^#/, '') + '&' + location.search.replace(/^\?/, '')).replace(/^&|&$/g, ''));
+  if (q.has('leave')) { delete st.token; save(); }
+  const d = q.get('d'); if (d && SAFE_URL.test(d)) st.dir = trimUrl(d);   // 目錄網址只收 https（本機測試可以 http://127.0.0.1）
+  const c = (q.get('c') || '').toUpperCase(); const u = q.get('u') || '';
+  if (CODE_RE.test(c) && c !== st.code) { st.code = c; delete st.token; delete st.url; }
+  if (/^https?:\/\//.test(u)) { if (trimUrl(u) !== st.url) delete st.token; st.url = trimUrl(u); if (!CODE_RE.test(c)) st.code = st.code && st.url === trimUrl(u) ? st.code : ''; }
+  const k = q.get('k') || q.get('i'); if (/^[A-Za-z0-9_-]{8,40}$/.test(k || '')) st.invite = k;
+  save(); if (location.hash || location.search) history.replaceState(null, '', location.pathname);
+})();
+
+$('#f-code').addEventListener('change', checkHost);
+$('#f-code').addEventListener('input', () => { const v = $('#f-code').value.trim(); if (CODE_RE.test(v.toUpperCase()) || /^https?:\/\/\S+\.\S+/.test(v) || /@https?:\/\//.test(v)) checkHost(); });
+$('#f-pick').addEventListener('change', () => { if ($('#f-pick').value) { $('#f-code').value = $('#f-pick').value; checkHost(); } });
+$('#f-dir').addEventListener('change', () => { st.dir = trimUrl($('#f-dir').value); save(); loadList(); checkHost(); });
+$('#f-go').addEventListener('click', join);
+$('#v-join').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') join(); });
+$('#f-terms').addEventListener('click', async () => {
+  if (!target) await checkHost(); if (!target) return err('#f-err', '先輸入聯機碼，才看得到這台主機的條款');
+  try { const t = await getJson(`${target.url}/net/terms`); const m = document.createElement('div'); m.className = 'modal'; m.innerHTML = '<div class="card"></div>'; m.firstChild.textContent = t.text || '（主機沒有提供條款）'; m.onclick = () => m.remove(); document.body.appendChild(m); }
+  catch (e) { err('#f-err', '讀不到條款：' + e.message); }
+});
+$('#go-retry').addEventListener('click', autoConnect);
+$('#go-reset').addEventListener('click', () => { delete st.token; save(); startJoin(); });
+$('#go-switch').addEventListener('click', () => { delete st.token; st.code = ''; st.url = ''; save(); $('#f-code').value = ''; startJoin(); });
+
+if (st.token && (st.code || st.url)) autoConnect(); else startJoin();
+</script>
+</body>
+</html>
